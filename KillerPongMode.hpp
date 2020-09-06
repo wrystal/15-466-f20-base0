@@ -31,12 +31,17 @@ struct KillerPongMode : Mode {
 	glm::vec2 right_paddle = glm::vec2( court_radius.x - 0.5f, 0.0f);
 
     // initially every one has 20 hps, if got hit by the ball, reduce 1 hp
-	uint32_t left_hp = 15;
-	uint32_t right_hp = 15;
+    uint32_t init_hp = 15;
+	uint32_t left_hp = init_hp;
+	uint32_t right_hp = init_hp;
 	// when losing 1 hp, there are invincible_sec seconds for invincible
 	float invincible_sec = 1.0f;
-    float left_invincible_elapsed = 0.0f;
-    float right_invincible_elapsed = 0.0f;
+    float left_invincible_elapsed = 1.0f;
+    float right_invincible_elapsed = 1.0f;
+
+    // when hit by a ball, color of the paddle will change to red, the red will last for hit_color_change_sec seconds
+    float hit_color_change_sec = 0.05f;
+
     // how fast can this ai move (the larger the harder to beat the ai)
 	float ai_speed_factor = 7.0f;
 	// 1: currently moving up, -1: moving down, 0: not moving

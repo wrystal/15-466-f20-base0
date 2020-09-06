@@ -136,8 +136,6 @@ void KillerPongMode::update(float elapsed) {
         return;
     }
 
-	static std::mt19937 mt; //mersenne twister pseudo-random number generator
-
 	//----- paddle update -----
 
 	{//right player ai
@@ -172,7 +170,7 @@ void KillerPongMode::update(float elapsed) {
                     }
 	            } else {
                     // starts to randomly move up or down
-                    ai_moving_direction = mt() / float(mt.max()) > 0.5f ? 1 : -1;
+                    ai_moving_direction = rand() / float(RAND_MAX) > 0.5f ? 1 : -1;
 	            }
 	        } else {
 	            // clear moving flag
@@ -198,8 +196,8 @@ void KillerPongMode::update(float elapsed) {
 
 	// the last ball is the latest ball, check its age to see if we need to create a new one
 	if (balls.size() == 0 || balls.back().age >= ball_create_interval) {
-        float init_vel_x = (mt() / float(mt.max())) * 2 - 1; // [-1, 1]
-        float init_vel_y = (mt() / float(mt.max())) * 2 - 1; // [-1, 1]
+        float init_vel_x = (rand() / float(RAND_MAX)) * 2 - 1; // [-1, 1]
+        float init_vel_y = (rand() / float(RAND_MAX)) * 2 - 1; // [-1, 1]
         // make sure x^2 + y^2 = 1
         init_vel_x = std::sqrt(init_vel_x * init_vel_x / (init_vel_x * init_vel_x + init_vel_y * init_vel_y)) * (init_vel_x > 0 ? 1 : -1);
         init_vel_y = std::sqrt(init_vel_y * init_vel_y / (init_vel_x * init_vel_x + init_vel_y * init_vel_y)) * (init_vel_y > 0 ? 1 : -1);
@@ -306,9 +304,11 @@ void KillerPongMode::draw(glm::uvec2 const &drawable_size) {
 	//some nice colors from the course web page:
 	#define HEX_TO_U8VEC4( HX ) (glm::u8vec4( (HX >> 24) & 0xff, (HX >> 16) & 0xff, (HX >> 8) & 0xff, (HX) & 0xff ))
 	const glm::u8vec4 bg_color = HEX_TO_U8VEC4(0x171714ff);
-	const glm::u8vec4 fg_color = HEX_TO_U8VEC4(0xd1bb54ff);
+    const glm::u8vec4 fg_color = HEX_TO_U8VEC4(0xd1bb54ff);
 	const glm::u8vec4 shadow_color = HEX_TO_U8VEC4(0x604d29ff);
-	const std::vector< glm::u8vec4 > rainbow_colors = {
+	const glm::u8vec4 hit_color = HEX_TO_U8VEC4(0xff0000ff);
+    const glm::u8vec4 paddle_invincible_color = HEX_TO_U8VEC4(0xd1bb5411);
+    const std::vector< glm::u8vec4 > rainbow_colors = {
 		HEX_TO_U8VEC4(0x604d29ff), HEX_TO_U8VEC4(0x624f29fc), HEX_TO_U8VEC4(0x69542df2),
 		HEX_TO_U8VEC4(0x6a552df1), HEX_TO_U8VEC4(0x6b562ef0), HEX_TO_U8VEC4(0x6b562ef0),
 		HEX_TO_U8VEC4(0x6d572eed), HEX_TO_U8VEC4(0x6f592feb), HEX_TO_U8VEC4(0x725b31e7),
@@ -389,9 +389,26 @@ void KillerPongMode::draw(glm::uvec2 const &drawable_size) {
 	draw_rectangle(glm::vec2( 0.0f, court_radius.y+wall_radius), glm::vec2(court_radius.x, wall_radius), fg_color);
 
 	//paddles:
-	draw_rectangle(left_paddle, paddle_radius, fg_color);
-	draw_rectangle(right_paddle, paddle_radius, fg_color);
-	
+	if(left_invincible_elapsed < hit_color_change_sec) {
+	    // after hit by a ball
+        draw_rectangle(left_paddle, paddle_radius, hit_color);
+	} else if (left_invincible_elapsed < invincible_sec) {
+	    // during invincible time
+        draw_rectangle(left_paddle, paddle_radius, paddle_invincible_color);
+	} else {
+	    // other normal time
+        draw_rectangle(left_paddle, paddle_radius, fg_color);
+    }
+
+    if(right_invincible_elapsed < hit_color_change_sec) {
+        draw_rectangle(right_paddle, paddle_radius, hit_color);
+    } else if (right_invincible_elapsed < invincible_sec) {
+        // during invincible time
+        draw_rectangle(right_paddle, paddle_radius, paddle_invincible_color);
+    } else {
+        // other normal time
+        draw_rectangle(right_paddle, paddle_radius, fg_color);
+    }
 
 	//ball:
 	for(auto& ball: balls) {
